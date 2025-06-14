@@ -1,0 +1,17 @@
+.card {
+    border-radius: 1rem;
+}
+.card-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+
+/* Oculta el ícono de validación de Bootstrap */
+.form-control.is-invalid {
+    background-image: none !important;
+}
+
+.form-select.is-invalid {
+    background-image: none !important;
+}
