@@ -1,6 +1,7 @@
 <?php
 require_once  __DIR__ . ("/../model/Cliente.php");
 require_once  __DIR__ . ("/../model/Documento.php");
+require_once  __DIR__ . ("/../model/LogModel.php");
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -8,10 +9,13 @@ class ClienteController
 {
     private $ClienteModel;
     private $DocumentoModel;
+    private $LogModel;
+
     public function __construct()
     {
         $this->ClienteModel = new Cliente();
         $this->DocumentoModel = new Documento();
+        $this->LogModel = new LogModel();
     }
     public function listAll()
     {
@@ -46,7 +50,10 @@ class ClienteController
         $correo_cli = htmlspecialchars(trim($inputData['correo_cli'] ?? ''));
         $telefono_cli = htmlspecialchars(trim($inputData['telefono_cli'] ?? ''));
         $estado_cli = htmlspecialchars(trim($inputData['estado_cli'] ?? ''));
-        $idusuario = htmlspecialchars(trim($inputData['idusuario'] ?? ''));
+        if (!isset($_SESSION['idusuario'])) {
+            return ["error" => "No tienes permisos para acceder a esta información."];
+        }
+        $idusuario = $_SESSION['idusuario'];
         // --- Validaciones de campos obligatorios ---
         if (empty($idusuario)) {
             echo json_encode(['error' => 'El campo idusuario es obligatorio']);
@@ -133,11 +140,29 @@ class ClienteController
                 // Considera un "rollback" aquí si es necesario.
                 return;
             }
+
+            $this->LogModel->registrarLog(
+                $idusuario,
+                'Documento Registrado',
+                "Se registró un documento '$nombreArchivo' para el cliente con ID $idCliente",
+                $idCliente,
+                'clientes'
+            );
+
         } elseif ($archivo && $archivo['error'] !== UPLOAD_ERR_NO_FILE) {
             echo json_encode(["error" => "Error al subir el archivo: " . $this->getUploadErrorMessage($archivo['error'])]);
             // Considera eliminar el cliente si el archivo es obligatorio y falló la subida
             return;
         }
+
+        $this->LogModel->registrarLog(
+            $idusuario,
+            'Cliente Registrado',
+            "Se registró al cliente '$nom_cli' con ID $idCliente",
+            $idCliente,
+            'clientes'
+        );
+
         // --- Respuesta final si todo fue exitoso ---
         echo json_encode(["success" => "Cliente registrado correctamente.", "cliente_id" => $idCliente]);
         // Si el archivo fue subido, también puedes incluir info del documento
@@ -182,6 +207,10 @@ class ClienteController
         $correo_cli = htmlspecialchars(trim($inputData['correo_cli'] ?? ''));
         $telefono_cli = htmlspecialchars(trim($inputData['telefono_cli'] ?? ''));
         $estado_cli = htmlspecialchars(trim($inputData['estado_cli'] ?? ''));
+        if (!isset($_SESSION['idusuario'])) {
+            return ["error" => "No tienes permisos para acceder a esta información."];
+        }
+        $idusuario = $_SESSION['idusuario'];
 
         if (empty($id_cliente)) {
             echo json_encode(['error' => 'El campo id_cliente es obligatorio para actualizar.']);
@@ -253,7 +282,17 @@ class ClienteController
                     echo json_encode(["error" => "Error al eliminar documento: " . json_encode($resultado)]);
                     return;
                 }
+
+                // Log de eliminación de documento
+                $this->LogModel->registrarLog(
+                    $idusuario,
+                    'Documento Eliminado',
+                    "Se eliminó el documento '{$doc['nombre_doc']}' con ID {$doc['id_documento']} del cliente con ID $id_cliente",
+                    $id_cliente,
+                    'clientes'
+                );
             }
+
 
             $id_documento_unico = uniqid();
             $nombreArchivo = basename($archivo['name']);
@@ -281,6 +320,14 @@ class ClienteController
 
             $mensajeDocumento = "Documento actualizado correctamente.";
             $documentoRegistrado = true;
+
+            $this->LogModel->registrarLog(
+            $idusuario,
+            'Documento Modificado',
+            "Se actualizó el documento '$nombreArchivo' para el cliente con ID $id_cliente",
+            $id_cliente,
+            'clientes'
+        );
         } elseif ($archivo && $archivo['error'] !== UPLOAD_ERR_NO_FILE) {
             echo json_encode(["error" => "Error al subir el archivo: " . $this->getUploadErrorMessage($archivo['error'])]);
             return;
@@ -291,9 +338,20 @@ class ClienteController
             return;
         }
 
+        $this->LogModel->registrarLog(
+            $idusuario,
+            'Cliente Modificado',
+            "Se modificó el cliente '$nom_cli' con ID $id_cliente",
+            $id_cliente,
+            'clientes'
+        );
+
+
         $response = ["success" => "Actualización completada."];
         if ($hayCambiosCliente) $response["cliente"] = $mensajeCliente;
         if ($documentoRegistrado) $response["documento"] = $mensajeDocumento;
+
+
 
         echo json_encode($response);
     }

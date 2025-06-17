@@ -7,7 +7,7 @@ class Login
     public function __construct()
     {
         $database = new Database();
-        $this->conn = $database->getConnection();
+        $this->conn = $database->getConnectionCrm();
     }
 
         public function getUserByUsername($usuario)

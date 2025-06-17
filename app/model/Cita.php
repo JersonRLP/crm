@@ -18,7 +18,7 @@ class Cita
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-        public function createCita($fecha_cita, $lugar_cita, $tipo_cita, $objetivo_cita,$estado_cita,$comentarios_cita,$id_cliente,$idusuario)
+    public function createCita($fecha_cita, $lugar_cita, $tipo_cita, $objetivo_cita, $estado_cita, $comentarios_cita, $id_cliente, $idusuario)
     {
         try {
             $sql = "INSERT INTO citas (fecha_cita, lugar_cita, tipo_cita, objetivo_cita, estado_cita, comentarios_cita, id_cliente, idusuario)
@@ -41,7 +41,7 @@ class Cita
         }
     }
 
-        public function update($id_cita, $fecha_cita, $lugar_cita, $tipo_cita, $objetivo_cita, $estado_cita, $comentarios_cita)
+    public function update($id_cita, $fecha_cita, $lugar_cita, $tipo_cita, $objetivo_cita, $estado_cita, $comentarios_cita)
     {
         try {
             $sql = "UPDATE citas SET fecha_cita = :fecha_cita, lugar_cita = :lugar_cita, tipo_cita = :tipo_cita, objetivo_cita = :objetivo_cita , estado_cita = :estado_cita, comentarios_cita = :comentarios_cita WHERE id_cita = :id_cita";

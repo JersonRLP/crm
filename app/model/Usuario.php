@@ -10,14 +10,14 @@ class Usuario
         $this->conn = $database->getConnectionCrm();
     }
 
-        public function listar()
+    public function listar()
     {
         $stmt = $this->conn->query("SELECT idusuario, nombres, usuario, password, telefono, tipo, area, cargo, correo, estado  from usuario where  estado =1 and area = 'comercial';");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
 
-    public function createUsuario($nombres, $usuario, $password, $telefono,$cargo,$correo)
+    public function createUsuario($nombres, $usuario, $password, $telefono, $cargo, $correo)
     {
         try {
             $sql = "INSERT INTO usuario (nombres, usuario, password, telefono, tipo, area, cargo, correo, estado)
@@ -38,7 +38,7 @@ class Usuario
         }
     }
 
-        public function update($idusuario, $nombres, $usuario, $password, $telefono, $cargo, $correo , $estado)
+    public function update($idusuario, $nombres, $usuario, $password, $telefono, $cargo, $correo, $estado)
     {
         try {
             $sql = "UPDATE usuario SET nombres = :nombres, usuario = :usuario, password = :password, telefono = :telefono , cargo = :cargo, correo = :correo, estado = :estado WHERE idusuario = :idusuario";
@@ -59,26 +59,31 @@ class Usuario
         }
     }
 
-        public function BuscarxId($id){
+    public function BuscarxId($id)
+    {
         $stmt = $this->conn->prepare("SELECT * FROM usuario WHERE id = ? and estado = 1");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-        public function existeUsuario($usuario) {
+    public function existeUsuario($usuario)
+    {
         $stmt = $this->conn->prepare("SELECT count(*) from usuario where usuario = ? and estado =1 ");
         $stmt->execute([$usuario]);
         return $stmt->fetchColumn() > 0;
     }
-        public function existeTelefono($usuario) {
+    public function existeTelefono($usuario)
+    {
         $stmt = $this->conn->prepare("SELECT count(*) from usuario where telefono = ? and estado =1 ");
         $stmt->execute([$usuario]);
         return $stmt->fetchColumn() > 0;
     }
 
-        public function existeCorreo($usuario) {
+    public function existeCorreo($usuario)
+    {
         $stmt = $this->conn->prepare("SELECT count(*) from usuario where correo = ? and estado =1 ");
         $stmt->execute([$usuario]);
         return $stmt->fetchColumn() > 0;
     }
+
 }

@@ -16,66 +16,48 @@ class LoginController
 
 
 
-    public function login() {
-        // Paso 1: Obtener los datos del cuerpo de la solicitud (FormData o JSON)
-        $inputData = $_POST; // Intenta obtener de FormData primero
+public function login()
+{
+    header('Content-Type: application/json; charset=utf-8'); // ← importante
 
-        // Si $_POST está vacío, intenta leer como JSON (para peticiones tipo application/json)
-        if (empty($inputData)) {
-            $jsonInput = file_get_contents("php://input");
-            $inputData = json_decode($jsonInput, true); // true para array asociativo
-        }
+    $inputData = $_POST;
 
-        // Verifica si inputData está vacío después de ambos intentos
-        if (empty($inputData)) {
-            $_SESSION['error'] = "No se recibieron datos de usuario y contraseña.";
-            header("Location: /crm/app/views/Login");
-            exit();
-        }
-
-        // Paso 2: Limpiar y validar la entrada
-        // Usa el operador de coalescencia nula (?? '') para evitar errores si las claves no existen
-        $usuario = trim($inputData['usuario'] ?? '');
-        $password = trim($inputData['password'] ?? ''); // Asumo 'password' como clave para la contraseña
-
-        if (empty($usuario) || empty($password)) {
-            $_SESSION['error'] = "Por favor, ingresa tu usuario y contraseña.";
-            header("Location: /crm/app/views/Login");
-            exit();
-        }
-
-        // Paso 3: Obtener el usuario de la base de datos
-        // Asegúrate de que la columna en la BD para el nombre de usuario sea 'usuario'
-        // Y que tu método getUserByUsername en el modelo devuelva el campo 'password' tal cual está en la BD.
-        $user = $this->LoginModel->getUserByUsername($usuario);
-
-        // Paso 4: Verificar si el usuario existe Y si la contraseña es correcta (COMPARACIÓN DE TEXTO PLANO)
-        // ESTA ES LA COMPARACIÓN INSEGURA, PERO ES LO QUE SOLICITASTE.
-        if ($user && $password === $user['password']) {
-            // Contraseña correcta: Iniciar sesión
-
-            // Regenerar el ID de sesión para prevenir ataques de fijación de sesión
-            session_regenerate_id(true);
-
-            // Almacenar datos del usuario en la sesión
-            $_SESSION['idusuario'] = $user['idusuario'];
-            $_SESSION['nombres'] = $user['nombres'];
-            $_SESSION['usuario'] = $user['usuario'];
-            $_SESSION['correo'] = $user['correo'];
-            $_SESSION['loggedin'] = true;
-
-            // Redirigir al dashboard
-            // Ajusta la ruta si es necesario
-            header("Location: /crm/app/views/dashboard.php");
-            exit();
-
-        } else {
-            // Usuario no encontrado o contraseña incorrecta
-            $_SESSION['error'] = "Usuario o contraseña incorrectos.";
-            header("Location: /crm/app/views/Login"); // Redirigir al login
-            exit();
-        }
+    if (empty($inputData)) {
+        $jsonInput = file_get_contents("php://input");
+        $inputData = json_decode($jsonInput, true);
     }
+
+    if (empty($inputData)) {
+        echo json_encode(["error" => "No se recibieron datos de usuario y contraseña."]);
+        exit;
+    }
+
+    $usuario = trim($inputData['usuario'] ?? '');
+    $password = trim($inputData['password'] ?? '');
+
+    if (empty($usuario) || empty($password)) {
+        echo json_encode(["error" => "Por favor, ingresa tu usuario y contraseña."]);
+        exit;
+    }
+
+    $user = $this->LoginModel->getUserByUsername($usuario);
+
+    if ($user && $password === $user['password']) {
+        session_regenerate_id(true);
+        $_SESSION['idusuario'] = $user['idusuario'];
+        $_SESSION['nombres'] = $user['nombres'];
+        $_SESSION['usuario'] = $user['usuario'];
+        $_SESSION['correo'] = $user['correo'];
+        $_SESSION['loggedin'] = true;
+
+        echo json_encode(["success" => true]);
+        exit;
+    } else {
+        echo json_encode(["error" => "Usuario o contraseña incorrectos."]);
+        exit;
+    }
+}
+
 
     public function logout() {
         // 1. Elimina todas las variables de la sesión del array $_SESSION.

@@ -1,5 +1,6 @@
 <?php
 require_once  __DIR__ . ("/../model/Cita.php");
+require_once  __DIR__ . ("/../model/LogModel.php");
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -8,10 +9,11 @@ if (session_status() === PHP_SESSION_NONE) {
 class CitaController
 {
     private $CitaModel;
-
+    private $LogModel;
     public function __construct()
     {
         $this->CitaModel = new Cita();
+        $this->LogModel = new LogModel();
     }
 
     public function listAll()
@@ -79,6 +81,14 @@ class CitaController
         $resultado = $this->CitaModel->createCita($fecha_cita, $lugar_cita, $tipo_cita, $objetivo_cita, $estado_cita, $comentarios_cita, $id_cliente, $idusuario);
 
         if ($resultado) {
+
+            $this->LogModel->registrarLog(
+            $idusuario,
+            'Cita Registrada',
+            "Se registró una cita con ID $resultado",
+            $resultado,
+            'citas'
+        );
             echo json_encode(['success' => 'Cita registrada correctamente']);
         } else {
             echo json_encode(['error' => 'Error al registrar cita']);
@@ -102,9 +112,24 @@ class CitaController
         $objetivo_cita = htmlspecialchars(trim($inputData['objetivo_cita'] ?? ''));
         $estado_cita = htmlspecialchars(trim($inputData['estado_cita'] ?? ''));
         $comentarios_cita = htmlspecialchars(trim($inputData['comentarios_cita'] ?? ''));
+
+        if (!isset($_SESSION['idusuario'])) {
+        echo json_encode(['error' => 'No tienes permisos para realizar esta acción']);
+        return;
+        }
+
+        $idusuario = $_SESSION['idusuario'];
+
         $resultado = $this->CitaModel->update($id_cita, $fecha_cita, $lugar_cita, $tipo_cita, $objetivo_cita, $estado_cita, $comentarios_cita);
 
         if ($resultado) {
+            $this->LogModel->registrarLog(
+            $idusuario,
+            'Cita Actualizada',
+            "Se actualizó la cita con ID $id_cita",
+            $id_cita,
+            'citas'
+        );
             echo json_encode(['success' => 'Cita Modificada correctamente']);
         } else {
             echo json_encode(['error' => 'Error al Modificar cita']);
